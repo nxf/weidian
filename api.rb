@@ -1,9 +1,6 @@
-require 'Net/http'
-require 'json'
+require './api_base'
 
 class Api
-
-  @@base = URI("http://api.vdian.com/api")
 
   def initialize(accessToken,version,format)
     @accessToken = accessToken;
@@ -23,13 +20,15 @@ class Api
     end
 
     pub_str = %Q/{"method":"#{pub[:method]}","access_token":"#{accessToken}","version":"#{version}","format":"#{format}"}/;
-    res = Net::HTTP.post_form(@@base,'public' => pub_str,'param' => JSON.generate(param))
-    puts res.body
 
+    puts ApiBase.json(param)
+    res = ApiBase.post(pub_str,param)
+    puts res
   end
 
+  def method_missing(m, *args, &block)
+    method_name = m.to_s[8..-1].gsub(/_/,".")
+    execute(args[0],{:method => method_name})
+    puts "#{method_name} with #{args.inspect} and #{block}"
+  end
 end
-
-
-api = Api.new("6bc23eed2ec588edd50cdd8110f196120002518540","1.0","json")
-api.execute({itemid:"1146288080"},{:method => "vdian.item.get"})
